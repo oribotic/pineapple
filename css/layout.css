@@ -18,8 +18,42 @@
 	background: #888;
 	}
 	
+	
+	
 /* #Site Styles
 ================================================== */
+.show {
+display: block;
+}
+.hide {
+display: none;
+}
+
+.tools {
+color: #4d4d4d;
+}
+#minus:hover, #minus.click {
+	color: #ff7bac;
+}
+
+#plus:hover, #plus.click {
+	color: #3fa9f5;
+}
+
+#about:hover, #about.click {
+	color: #1a1a1a;
+}
+
+
+#move:hover, #move.click {
+
+	color: #7ac943;
+}
+
+#saveit:hover, #saveit.click  {
+	color: #ff931e;
+}
+
 
 /* #Page Styles
 ================================================== */

@@ -11,6 +11,7 @@ _pattern_y_offset = 2;
 _offset = 80;
 _griddotsize = 15;
 _linewidth = 5;
+_tool = "move";
 
 // pineapple array - draw the lines for the artwork
 _pineapple = [];
@@ -30,6 +31,23 @@ canvas.height = _height;
 
 console.debug(); //.attr("width"));
 
+_circle_colours = {
+	move: {
+		strokeStyle: "rgba(122,201,67,0.8)", //'#7ac943',
+		strokeWidth: 8,
+	 	fillStyle: "rgba(255,255,255,0.5)", //'#7ac943',
+	},
+	minus: {
+		strokeStyle: "rgba(255,123,172,0.8)", //'#7ac943',
+		strokeWidth: 8,
+	 	fillStyle: "rgba(255,255,255,0.5)", //'#7ac943',
+	},
+	plus: {
+		strokeStyle: "rgba(63,169,245,0.8)", //'#7ac943',
+		strokeWidth: 8,
+	 	fillStyle: "rgba(255,255,255,0.5)", //'#7ac943',
+	}
+};
 // ------------------------------------------------------------------------
 // SETUP & DRAWING
 // ------------------------------------------------------------------------
@@ -90,25 +108,34 @@ function drawPineapple() {
 					
 					// draw the grid dots here
 					$('canvas').addLayer({
-						//layer: true,
 						method: 'drawArc',
 						draggable: true,
+						layer: true,
 						data: {
 							i: (x+ix),
-							j: (y+iy)
+							j: (y+iy),
+						},
+						update: function () {
+							// console.debug(this.name);
+ 						   _grid[this.data.i][this.data.j].x = this.x;
+ 						   _grid[this.data.i][this.data.j].y = this.y;
 						},
 						groups: ["circles"],
 						name: "g"+(x+ix)+"_"+(y+iy),
 						visible: true,
-					 	fillStyle: '#7ac943',
+						strokeStyle: "rgba(122,201,67,0.8)", //'#7ac943',
+						strokeWidth: 8,
+					 	fillStyle: "rgba(255,255,255,0.8)", //'#7ac943',
 					  	x: _grid[x+ix][y+iy].x, 
 						y: _grid[x+ix][y+iy].y,
 					  	radius: _griddotsize,
+						mousedown: function(layer) { 							
+							gravity(layer.data.i,layer.data.j); 
+						},
 						drag: function(layer) {
 						   // code to run as layer is being dragged
 						   //console.debug(layer.data.i);
-						   _grid[layer.data.i][layer.data.j].x = layer.x;
-						   _grid[layer.data.i][layer.data.j].y = layer.y;
+						   layer.update();
 						   updatePineapple();
 						},
 						dragstop: function (layer) {
@@ -117,7 +144,6 @@ function drawPineapple() {
 							updatePineapple();
 							//makeSVG();
 						},
-				
 						cursors: {
 							mouseover: 'move'
 						}
@@ -194,9 +220,6 @@ function makeSVG (func) {
     var canvas = document.getElementById('canvas');
     cs.wrapCanvas(canvas);
     var ctx = canvas.getContext('2d');
-
-   
-	
 	$("#svg").html(ctx.getSVG());
 	// remove filled areas placed there by the svg convertor
 	
@@ -207,9 +230,7 @@ function makeSVG (func) {
 	//stroke-width="1"  > stroke-width="5"
 	$("path[stroke-width='1']").attr("stroke-width","5").attr("stroke-linejoin","round");
 	
-	
 	// make object for post
-	
 	$("#dumpSVG").text( $("#svg").html().split("><").join(">\n<") ); 
 }
 
@@ -298,6 +319,141 @@ $( "#hide" ).click(function() {
 // STORAGE
 // ------------------------------------------------------------------------
 _storage=$.localStorage;
+
+
+// ------------------------------------------------------------------------
+// GRAVITY
+// ------------------------------------------------------------------------
+_gravity 		= 9; // how fast gravity will work smaller is faster
+_gravity_range 	= 2; // times the initial grid size
+
+function gravity (i, j) {
+	
+	if (_tool=="minus")
+		gravityfield = _gravity;
+	
+	if (_tool=="plus")
+		gravityfield = -_gravity;
+		
+	if (_tool=="move")
+		return;
+	
+	var range = _gravity_range * _size;
+	// affect each object in the vicinity
+	for (var ii = i-_gravity_range; ii< i+_gravity_range; ii++)
+	{
+		for (var jj = j-_gravity_range; jj < j+_gravity_range; jj++)
+		{
+			// test for bounds of our grid or we will have out of range errors 
+			if (ii>=0 && jj >=0 && ii < _x && jj < _y)
+			{
+				if (i == ii && j == jj)
+				{
+					console.debug("same same: g"+ii+"_"+jj);
+				} else {
+					var x1 =  _grid[i][j].x;
+					var y1 =  _grid[i][j].y;
+					var x2 =  _grid[ii][jj].x;
+					var y2 =  _grid[ii][jj].y;
+					var dx = (x2-x1);
+					var dy = (y2-y1);
+					
+					if (dx == 0) 
+					{
+						var slope = 0;
+						var x3 =  x1;
+						var y3 =  y2 - ((dy)/gravityfield);
+					} else 
+					if (dy == 0)
+					{
+						var slope = 0;
+						var x3 =  x2 - ((dx)/gravityfield);
+						var y3 =  slope*(x3 - x1) + y1;
+					} else 
+					{
+						var slope = (dy)/(dx);
+						var x3 =  x2 - ((dx)/gravityfield);
+						var y3 =  slope*(x3 - x1) + y1;
+					}
+					
+				
+			console.debug("g"+ii+"_"+jj + " x1: " + x1 + ": y1: "+ y1);
+			console.debug("g"+ii+"_"+jj + " x2: " + x2 + ": y2: "+ y2);
+			console.debug("g"+ii+"_"+jj + " slope: " + slope + ": x3: "+ x3 + " y3: "+ y3);
+					$("canvas").animateLayer("g"+ii+"_"+jj, {
+						x: x3,
+						y: y3
+					}, 
+					500, 
+						function (layer) {
+							layer.update();
+							updatePineapple();
+						}
+					);
+				}
+			}
+		}
+	}
+}
+
+
+// ------------------------------------------------------------------------
+// INTERACTION
+// ------------------------------------------------------------------------
+function up(button)
+{
+	/*$(".tools").each( function (index) {
+		var src = $(this).attr("src");
+		src.replace("/dn/","/up/");
+		$(this).attr("src", src);
+		c/nsole.log(src);
+	});*/
+	
+	$(".info").removeClass("show").addClass("hide");
+	$("#info_"+button).removeClass("hide").addClass("show");
+	
+	$(".tools").removeClass("click");
+	$("#"+button).addClass("click");
+	
+}
+
+$("#about").click(function() {
+	up("about");
+	//$(this).attr( "src", $(this).attr("src").replace("/dn/","/up/") );
+	//$(this).attr( "src", $(this).attr("src").replace("/up/","/dn/") );	
+});
+
+$("#move").click(function() {
+	_tool = "move";
+	$("canvas").setLayerGroup("circles",_circle_colours.move).drawLayers();
+	up("move");
+	// $(this).attr( "src", $(this).attr("src").replace("/up/","/dn/") );
+});
+
+$("#minus").click(function() {
+	_tool = "minus";
+	$("canvas").setLayerGroup("circles",_circle_colours.minus).drawLayers();
+	up("minus");
+	//$(this).attr( "src", $(this).attr("src").replace("/up/","/dn/") );
+});
+
+$("#plus").click(function() {
+	_tool = "plus";
+	$("canvas").setLayerGroup("circles",_circle_colours.plus).drawLayers();
+	up("plus");
+	// $(this).attr( "src", $(this).attr("src").replace("/up/","/dn/") );
+});
+
+$("#saveit").click(function() {
+
+//	$("canvas").setLayerGroup("circles",_circle_colours.plus).drawLayers();
+	up("saveit");
+	// $(this).attr( "src", $(this).attr("src").replace("/up/","/dn/") );
+});
+
+
+
+
 
 
 
