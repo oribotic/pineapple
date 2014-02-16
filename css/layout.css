@@ -15,7 +15,8 @@
 	#Font-Face */
 
 	body {
-	background: #888;
+	background: #888 url('../images/bg.png');
+	
 	}
 	
 	
@@ -50,7 +51,7 @@ color: #4d4d4d;
 	color: #7ac943;
 }
 
-#saveit:hover, #saveit.click  {
+#saveit:hover, #saveit.click, .fa-edit:hover  {
 	color: #ff931e;
 }
 

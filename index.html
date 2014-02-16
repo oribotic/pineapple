@@ -27,6 +27,7 @@
 	<script src='js/jcanvas.js'></script>
 	<script src="js/canvas-getsvg.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/retina-1.1.0.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/jquery.storageapi.min.js" type="text/javascript" charset="utf-8"></script>
 
 	<!--[if lt IE 9]>
 		<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
@@ -50,17 +51,13 @@
 	<!-- Delete everything in this .container and get started on your own site! -->
 
 	<div class="container">
-		<div class="sixteen columns">
-			<hr />
-			
-		</div>
+		<div class="sixteen columns" style="height:20px;"></div>
 		<div class="twelve columns">
 			<canvas id="canvas" width='600' height='600'></canvas>
 		</div>
 		<div class="four columns" id="form">
-			<img src="images/pineapple.png" width="220" height="72" alt="Pineapple">
-			<hr />
-			<h3>
+			<img src="images/pineapple.png" style="margin-top:60px;" width="220" height="72" alt="Pineapple">
+			<h3 style="margin-top:30px;">
 				<i id="about" class="fa fa-question-circle click tools"></i>
 				<i id="move" class="fa fa-dot-circle-o tools"></i>
 				<i id="minus" class="fa fa-minus-circle tools"></i>
@@ -72,19 +69,20 @@
 			<p>Pineapple <em>(DE: Ananas)</em> is named after the folding pattern also known as the waterbomb. <br />Drag the dots to make reshape the folding pattern, and press save to download a PDF for digital fabrication.</p></div>
 			<div class="info hide" id="info_move"><h3 class="move-t">Move</h3>
 			<p>Click and drag the dots to form your own unique patterns. </p></div>
-			<div class="info hide" id="info_minus"><h3 class="minus-t">Minus</h3>
-			<p>Minus is an attractor, it makes the pattern tighter. Click onto a dot to attract the surrounding points towards the center of the point.</p></div>
-			<div class="info hide" id="info_plus"><h3 class="plus-t">Plus</h3>
-			<p>Plus pushes dots away, it makes the pattern fatter. Click onto a dot to push the surrounding points away from the center of the point..</p></div>
+			<div class="info hide" id="info_minus"><h3 class="minus-t">Gravity -</h3>
+			<p>Minus (gravity) is an attractor, it makes the pattern tighter. Click onto a dot to attract the surrounding points towards the center of the point.</p></div>
+			<div class="info hide" id="info_plus"><h3 class="plus-t">Gravity +</h3>
+			<p>Plus (gravity) pushes dots away, it makes the pattern fatter. Click nto a dot to push the surrounding points away from the center of the point..</p></div>
 			<div class="info hide" id="info_saveit">
 				<h3 class="saveit-t">Save as PDF</h3>
 				<form>
 				<label>Your Name / なまえ</label><input name="name" type="text" id="name"></input>
 				</form>
-				<button id="save">Save</button>
+				<button id="save"><i class="fa fa-save"></i> Save</button>
 				<button id="reset">Reset</button>
 				<button id="hide">Hide Dots</button>
 				<p id="download"></p>
+				<p id="old_files"></p>
 				
 			</div>
 			
@@ -97,7 +95,7 @@
 			
 		</div>
 		<div class="sixteen columns">
-			<hr />
+		
 			<div id="svg" width="1" height="1" style="isibility: hidden;"></div>
 		</div>
 	

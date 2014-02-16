@@ -24,10 +24,13 @@ _pineapple[4] = [[0,1],[1,1],[2,1],[4,1]];
 //_pineapple[3] = [[2,0],[2,1],[2,2],[3,2],[2,1],[3,0],[4,1],[3,2],[4,2],[4,1],[4,0]];
 //_pineapple[3] = [[4,2],[3,2]]; //,[4,1],[3,0]];
 
-_width = $("#canvas").parent().width();
-_height = _width;
+_width = $(window).width();
+_height = $(window).height();
 canvas.width = _width;
 canvas.height = _height;
+
+// recalculate the grid size based on the screen width
+_size = parseInt((_width-300)/(_x+2));
 
 console.debug(); //.attr("width"));
 
@@ -59,6 +62,8 @@ function init() {
 }
 
 init();
+
+
 
 function makeGridArray() {
 	for(i=0;i<_x; i++)
@@ -228,7 +233,8 @@ function makeSVG (func) {
 	$("path[stroke='none']").remove();
 	//stroke-linejoin="miter" > stroke-linejoin="round"
 	//stroke-width="1"  > stroke-width="5"
-	$("path[stroke-width='1']").attr("stroke-width","5").attr("stroke-linejoin","round");
+	$("path[stroke-width='1']").attr("stroke-width","5").attr("stroke-linejoin","round").attr("stroke","#CCC");
+	// $("path[stroke='#000']").attr("stroke","#333");
 	
 	// make object for post
 	$("#dumpSVG").text( $("#svg").html().split("><").join(">\n<") ); 
@@ -249,11 +255,15 @@ function cleanCanvas (canvas) {
 
 function postform ()
 {
+	var now = $.now();
+	var filename = $("#name").val()+"_"+now;
+	
+	store(filename,_grid);
 	$.ajax({
 		type: 		"POST",
 		data: 		{
 			name: 		$("#name").val(),
-			datetime: 	$.now(),
+			datetime: 	now,
 			svg: 		$("#svg").html()
 		},
 		url: 		"svg.php",
@@ -264,11 +274,16 @@ function postform ()
 	});
 }
 
-$( "#reset" ).click(function() {
+function reset()
+{
 	$('canvas').removeLayerGroup('circles');
 	$('canvas').removeLayerGroup('cp');
 	$('canvas').drawLayers();
 	$('canvas').clearCanvas();
+}
+
+$( "#reset" ).click(function() {
+	reset();
 	init();
 });
 
@@ -284,16 +299,8 @@ $( "#save" ).click(function() {
 		
 	makeSVG();
 	postform();
+	showStorage();
 });
-
-function hide() {
-	$('canvas').setLayerGroup('circles', {
-	  visible: false
-	})
-	.drawLayers();	
-	$("#hide").text("Show Dots");
-	
-}
 
 $( "#hide" ).click(function() {
 	if ($(this).text() == "Hide Dots")
@@ -315,10 +322,93 @@ $( "#hide" ).click(function() {
 	
 });
 
+
+function hide() {
+	$('canvas').setLayerGroup('circles', {
+	  visible: false
+	})
+	.drawLayers();	
+	$("#hide").text("Show Dots");
+	
+}
+
+
 // ------------------------------------------------------------------------
 // STORAGE
 // ------------------------------------------------------------------------
 _storage=$.localStorage;
+function store(stamp,data)
+{
+	// save a copy of the grid
+	if (!_storage.isSet("pineapple_saves"))
+	{
+		_storage.set("pineapple_saves",[]);
+	} 
+	var saves = [];
+	saves = _storage.get("pineapple_saves");
+	console.log(saves);
+	saves[saves.length] = stamp;
+	
+	// save the timestamp in an array
+	_storage.set("pineapple_saves",saves);
+	// save the data in a variable of the timestamp
+	_storage.set(stamp,data);
+	
+
+}
+
+function restore(key)
+{
+	reset();
+	console.log("[restore]");
+	console.log( key + " " + _storage.get(key) );
+	_grid = _storage.get(key);
+	drawPineapple();
+	/*
+	var keys = _storage.keys();
+	console.log(keys);
+	for(var k in keys)
+	{
+		console.log(keys[k]);
+		console.log(_storage.get(keys[k]));
+	}*/
+}
+
+function showStorage()
+{
+	var keys = _storage.get("pineapple_saves");
+	console.log(keys);
+	$("#old_files").html("<h5>Old Pineapples</h5><hr />");
+	for(var k in keys)
+	{
+		if(_storage.isEmpty(keys[k]))
+		{	
+			console.log(keys[k] + " is empty!");
+			//_storage.remove(keys[k]);
+			//keys.splice(k, 1); //[k] = null;
+			
+		} else {
+			console.log(keys[k]);
+			console.log(_storage.get(keys[k]));
+			
+			$("#old_files").append(
+			'<i class="fa fa-refresh" onClick="restore(\''+keys[k]+'\')" id="'+keys[k]+'"></i> '
+			);
+			$("#old_files").append(
+			'<a target="_new" href="outputs/'+keys[k]+'.pdf" style="text-decoration:none;"><i class="fa fa-download"></i> '+keys[k]+'</a><br />'
+			);
+			
+		}
+			
+	
+	}
+}
+
+function deleteStorage(key)
+{
+	_storage.remove(key);
+	// remove item from html dom
+}
 
 
 // ------------------------------------------------------------------------
@@ -448,7 +538,13 @@ $("#saveit").click(function() {
 
 //	$("canvas").setLayerGroup("circles",_circle_colours.plus).drawLayers();
 	up("saveit");
+	showStorage()
 	// $(this).attr( "src", $(this).attr("src").replace("/up/","/dn/") );
+});
+
+$(".fa-edit").click(function() {
+	console.log($(this).attr("id"));
+	
 });
 
 
